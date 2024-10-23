@@ -54,9 +54,9 @@ const FeedScreen = ({ navigation }: any) => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    setPage(0); // Reseta a página para 0 para garantir que pegue os dados mais recentes
-    await fetchData(); // Busca os dados novamente
-    setIsRefreshing(false); // Limpa o estado de refresh
+    setPage(0);
+    await fetchData();
+    setIsRefreshing(false);
   };
   
   async function fetchData() {
@@ -117,7 +117,7 @@ const FeedScreen = ({ navigation }: any) => {
   async function openModalOptions(id:number) {
     try {
       const response = await api.get(`/users/${user?.user_login}/posts`)
-     // alert(JSON.stringify(response.data));
+    
       const hasThisPost =  response?.data.find((item:any) => item?.id === id );
       console.log(response.data);
       
@@ -139,6 +139,7 @@ const FeedScreen = ({ navigation }: any) => {
 
 
   async function deletePost(){
+
     try {
       const response = await api.delete(`/posts/${currentPostId}`)
       closeBottomSheet()
@@ -148,8 +149,11 @@ const FeedScreen = ({ navigation }: any) => {
     } catch (error) {
       alert("Error ao apagar o post")
     }
+
+    
   }
   const renderPost = ({ item }: { item: FormatPost }) => (
+
     <View key={item.id} style={[styles.postContainer, { borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0.2 }]}>
       <View style={{ width: "90%", flexDirection: "row" }}>
         <Pressable onPress={() => navigation.navigate("Profile", {

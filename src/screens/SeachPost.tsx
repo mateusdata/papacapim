@@ -10,17 +10,17 @@ export default function SearchPosts({ navigation }: any) {
   const [posts, setPosts] = useState<FormatPost[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Função para buscar postagens com base no termo de pesquisa
+  
   async function fetchPosts(search: string) {
     try {
       setLoading(true);
       const response = await api.get("/posts", {
         params: {
           search: search,
-          page: 0, // Paginação inicial
+          page: 0, 
         }
       });
-      setPosts(response.data); // Atualiza a lista de postagens
+      setPosts(response.data); 
       setLoading(false);
     } catch (error) {
       console.log(error);
@@ -28,13 +28,13 @@ export default function SearchPosts({ navigation }: any) {
     }
   }
 
-  // Manipula a mudança no campo de pesquisa
+  
   const onChangeSearch = async (search: string) => {
-    setSearchQuery(search); // Atualiza o estado da pesquisa
+    setSearchQuery(search); 
     if (search.length > 0) {
-      fetchPosts(search); // Busca postagens que correspondem ao termo
+      fetchPosts(search); 
     } else {
-      setPosts([]); // Se a pesquisa estiver vazia, limpa a lista de postagens
+      setPosts([]); 
     }
   };
 
@@ -54,13 +54,13 @@ export default function SearchPosts({ navigation }: any) {
       </View>
 
       {loading ? (
-        <LoadingComponent /> // Exibe o componente de carregamento enquanto busca os dados
+        <LoadingComponent /> 
       ) : (
         <ScrollView contentContainerStyle={styles.scrollView}>
           {posts.length > 0 ? (
             posts.map((post: FormatPost) => (
               <Pressable 
-                onPress={() => navigation.navigate("PostDetail", { postId: post.id })} // Navega para detalhes do post
+                onPress={() => navigation.navigate("PostDetail", { postId: post.id })} 
                 android_ripple={{ color: "gray" }} 
                 key={post.id} 
                 style={styles.postContainer}
@@ -70,7 +70,7 @@ export default function SearchPosts({ navigation }: any) {
               </Pressable>
             ))
           ) : (
-            <Text style={styles.noResultsText}>Nenhuma postagem encontrada.</Text> // Mensagem quando não há postagens
+            <Text style={styles.noResultsText}>Nenhuma postagem encontrada.</Text> 
           )}
         </ScrollView>
       )}
