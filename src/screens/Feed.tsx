@@ -19,6 +19,8 @@ import LoadingComponent from '../components/LoadingComponent';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+
+
 const FeedScreen = ({ navigation }: any) => {
   const { openBottomSheet, closeBottomSheet } = useContext(ContextSheet);
   const { height, width } = Dimensions.get('window');
