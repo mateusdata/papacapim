@@ -153,7 +153,7 @@ const FeedScreen = ({ navigation }: any) => {
   const renderPost = ({ item }: { item: FormatPost | any }) => (
     <View key={item.id} style={[styles.postContainer, { borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0.2 }]}>
       <View style={{ width: "90%", flexDirection: "row" }}>
-        <Pressable onPress={() => navigation.navigate("Profile", {
+        <Pressable  onPress={() => navigation.navigate("Profile", {
           profile: {
             login: item.user_login,
             name: item.user_login
@@ -194,10 +194,12 @@ const FeedScreen = ({ navigation }: any) => {
               }
               {false && <Text>{item?.likes?.length}</Text>}
             </Pressable>
-            <Pressable onPress={() => openCommentsBottomSheet(item)} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+
+            <Pressable onPress={() => navigation.navigate("Comments", {currentPost: item})} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
               <AntDesign name="message1" size={22} color="black" />
               {false && <Text>{item?.likes?.length}</Text>}
             </Pressable>
+            
             <Pressable onPress={() => sharePost(item)} style={{ flexDirection: "row", alignItems: "center", gap: 2, right: 5 }}>
               <IconButton icon="share" size={22} />
             </Pressable>

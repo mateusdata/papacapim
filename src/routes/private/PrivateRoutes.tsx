@@ -7,6 +7,7 @@ import { colorPrimary } from '../../constants/constants';
 import CreatePost from '../../screens/CreatePost';
 import Profile from '../../screens/Profile';
 import SeachPost from '../../screens/SeachPost';
+import Comments from '../../screens/Comments';
 const Stack = createStackNavigator();
 
 export default function PrivateRoutes() {
@@ -34,6 +35,12 @@ export default function PrivateRoutes() {
         headerTitle: "Pesquisar postagens",
         headerTitleAlign: "center"
       }} />
+
+      <Stack.Screen name='Comments' component={Comments} options={{
+        headerTitle: "Comentarios",
+        headerTitleAlign: "center"
+      }} />
+
 
     </Stack.Navigator>
   )

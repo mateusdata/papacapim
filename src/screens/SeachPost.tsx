@@ -60,7 +60,7 @@ export default function SearchPosts({ navigation }: any) {
           {posts.length > 0 ? (
             posts.map((post: FormatPost) => (
               <Pressable 
-                onPress={() => navigation.navigate("PostDetail", { postId: post.id })} 
+              onPress={() => navigation.navigate("Comments", {currentPost: post})}
                 android_ripple={{ color: "gray" }} 
                 key={post.id} 
                 style={styles.postContainer}
