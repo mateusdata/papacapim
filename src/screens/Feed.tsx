@@ -8,7 +8,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import HeaderFeed from '../components/HeaderFeed';
 import ButtonAddPost from '../components/ButtonAddePost';
 import BottomSheet from '../components/BottomSheet';
-import { Avatar, IconButton } from 'react-native-paper';
+import { Avatar, Button, IconButton } from 'react-native-paper';
 import { api } from '../config/Api';
 import { AuthContext } from '../context/AuthContext';
 import { FormatPost } from '../interfaces';
@@ -17,9 +17,12 @@ import { colorPrimary } from '../constants/constants';
 import CommentsBottomSheet from '../components/CommentsBottomSheet';
 import LoadingComponent from '../components/LoadingComponent';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+
 
 const FeedScreen = ({ navigation }: any) => {
-  const { openBottomSheet } = useContext(ContextSheet);
+  const { openBottomSheet, closeBottomSheet } = useContext(ContextSheet);
   const { height, width } = Dimensions.get('window');
   const insets = useSafeAreaInsets();
   const { user, setWelcome, welcome } = useContext(AuthContext);
@@ -29,10 +32,14 @@ const FeedScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-
-  useEffect(() => {
-    fetchData();
-  }, [page]);
+  const [currentPostId, setCurrentPostId] = useState<number | null>(null)
+ 
+  
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [page])
+  );
 
   useEffect(() => {
     if (welcome) {
@@ -45,23 +52,38 @@ const FeedScreen = ({ navigation }: any) => {
     }
   }, [welcome]);
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setPage(0); // Reseta a página para 0 para garantir que pegue os dados mais recentes
+    await fetchData(); // Busca os dados novamente
+    setIsRefreshing(false); // Limpa o estado de refresh
+  };
+  
   async function fetchData() {
+    
     try {
-      const response = await api.get(`/posts?page=${page}`);
-      setPosts(prevPosts => [...prevPosts, ...response.data]);
-      setLoading(false);
-      setIsRefreshing(false);
+      const response: any = await api.get(`/posts?page=${page}`);
+      const itensFiltrados = response.data.filter((item: any) => item.post_id === null);
+      
+      
+      if (page === 0) {
+        setPosts(itensFiltrados);
+      } else {
+        setPosts(prevPosts => [...prevPosts, ...itensFiltrados]);
+      }
+  
     } catch (error) {
       alert("Erro ao buscar as postagens");
-      setLoading(false);
-      setIsRefreshing(false);
+    } finally {
+      setLoading(false); 
+      setIsRefreshing(false); 
     }
   }
-
-  async function handleLike(item: any) {    
+  
+  async function handleLike(item: any) {
   }
 
-  function openCommentsBottomSheet(post: FormatPost) {    
+  function openCommentsBottomSheet(post: FormatPost) {
   }
 
   async function sharePost(post: FormatPost) {
@@ -70,28 +92,65 @@ const FeedScreen = ({ navigation }: any) => {
         title: `Olá estou compartilhando um post de ${post?.user_login}`,
         message: post.message,
       });
-    } catch (error) {      
+    } catch (error) {
     }
   }
 
   function generationColor(id: number) {
     const colors = [
-    "#FF0000", 
-    "green", 
-    "#0000FF", 
-    "orange", 
-    "#FF4500", 
-    "#800080", 
-    "#00CED1", 
-    "#FF1493", 
-    "#696969", 
-    "#000000"  
+      "#FF0000",
+      "green",
+      "#0000FF",
+      "orange",
+      "#FF4500",
+      "#800080",
+      "#00CED1",
+      "#FF1493",
+      "#696969",
+      "#000000"
     ];
     return colors[id % colors.length];
   }
 
-  const renderPost = ({ item, index }: { item: FormatPost, index: any }) => (
-    <View key={index} style={[styles.postContainer, { borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0.2 }]}>
+  
+
+  async function openModalOptions(id:number) {
+    try {
+      const response = await api.get(`/users/${user?.user_login}/posts`)
+     // alert(JSON.stringify(response.data));
+      const hasThisPost =  response?.data.find((item:any) => item?.id === id );
+      console.log(response.data);
+      
+      if(response?.data?.length && hasThisPost){
+        setCurrentPostId(id)
+        openBottomSheet("FeedScreenWelcomeOption")
+        return
+      }
+
+      
+    } catch (error) {
+      alert("OCrreu um erro")
+      alert("Esse posts não é seu, e vc não tem permisão para apagar")
+      console.log(error);
+      
+    }
+   
+  }
+
+
+  async function deletePost(){
+    try {
+      const response = await api.delete(`/posts/${currentPostId}`)
+      closeBottomSheet()
+      const currentsPost:any = posts.filter((item:any) => item.id !== currentPostId);
+      setPosts(currentsPost)
+      setCurrentPostId(null)
+    } catch (error) {
+      alert("Error ao apagar o post")
+    }
+  }
+  const renderPost = ({ item }: { item: FormatPost }) => (
+    <View key={item.id} style={[styles.postContainer, { borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0.2 }]}>
       <View style={{ width: "90%", flexDirection: "row" }}>
         <Pressable onPress={() => navigation.navigate("Profile", {
           profile: {
@@ -120,7 +179,7 @@ const FeedScreen = ({ navigation }: any) => {
                 {dayjs(item.updated_at).format("hh:mm")}
               </Text>
             </View>
-            <Pressable onPress={() => { }} android_ripple={{ color: colorPrimary, borderless: true }}>
+            <Pressable onPress={() => openModalOptions(item.id)} android_ripple={{ color: colorPrimary, borderless: true }}>
               <SimpleLineIcons name="options" size={16} color="#c4c4c4" />
             </Pressable>
           </View>
@@ -145,9 +204,9 @@ const FeedScreen = ({ navigation }: any) => {
       </View>
     </View>
   );
-
+  
   const renderFooter = () => {
-    return <LoadingComponent/>;
+    return <LoadingComponent />;
   };
 
 
@@ -155,11 +214,6 @@ const FeedScreen = ({ navigation }: any) => {
     setPage(prevPage => prevPage + 1);
   };
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setPosts([]);
-    setPage(1);
-  };
 
   if (loading) {
     return <LoadingComponent />;
@@ -168,6 +222,7 @@ const FeedScreen = ({ navigation }: any) => {
   return (
     <SafeAreaProvider>
       <ButtonAddPost />
+      <Text>{String(currentPostId)}</Text>
       <CommentsBottomSheet currentPost={currentPost} />
       <View style={[styles.container, {
         paddingTop: insets.top,
@@ -176,7 +231,7 @@ const FeedScreen = ({ navigation }: any) => {
         paddingRight: insets.right,
       }]}>
         <FlatList
-          ListHeaderComponent={<HeaderFeed />}
+          ListHeaderComponent={<HeaderFeed navigation={navigation} />}
           data={posts}
           renderItem={renderPost}
           keyExtractor={(item) => item.id.toString()}
@@ -188,6 +243,8 @@ const FeedScreen = ({ navigation }: any) => {
           ListFooterComponent={renderFooter}
 
         />
+
+
         <BottomSheet id="FeedScreenWelcome" snapPoints={[height < 700 ? 45 : 35]}>
           <View style={{ padding: 20, alignItems: 'center' }}>
             <>
@@ -206,6 +263,23 @@ const FeedScreen = ({ navigation }: any) => {
             </>
           </View>
         </BottomSheet>
+
+
+
+        <BottomSheet id="FeedScreenWelcomeOption" snapPoints={[height < 700 ? 35 : 25]}>
+          <View style={{ padding: 10, alignItems: 'center' }}>
+            <>
+              <Button onPress={deletePost} mode='contained' buttonColor='red' labelStyle={{ fontSize: 20 }} textColor='white'>
+                Deletar postagem
+              </Button >
+              <Text style={{ fontSize: 16, color: '#555', textAlign: 'center', top: 8 }}>
+                Você está prestes a apagar sua postagem. Essa ação é permanente e não pode ser desfeita.
+              </Text>
+
+            </>
+          </View>
+        </BottomSheet>
+
         {showConfetti && (
           <ConfettiCannon
             count={200}
