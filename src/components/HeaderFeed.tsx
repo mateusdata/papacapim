@@ -10,8 +10,8 @@ export default function HeaderFeed({navigation}:any) {
   return (
     <View style={styles.container}>
       <View style={{ width: "100%", flexDirection: "row", justifyContent: "space-between", }}>
-        <View style={{ width: "50%", flexDirection: "row" }}>
-          <Text style={styles.title}>Papacampi</Text>
+        <View style={{ width: "50%", flexDirection: "row", gap:3 }}>
+          <Text style={styles.title}>Papacapim</Text>
           <Image source={logo} style={styles.logo} />
         </View>
 
