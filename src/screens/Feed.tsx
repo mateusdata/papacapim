@@ -52,37 +52,43 @@ const FeedScreen = ({ navigation }: any) => {
     }
   }, [welcome]);
 
+
+  
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setPage(0); 
     await fetchData(); 
     setIsRefreshing(false); 
-  };
-  
-  async function fetchData() {
+};
+
+async function fetchData() {
+    //setLoading(true); 
     try {
-      const response: any = await api.get(`/posts?page=${page}`);
-      const itensFiltrados = response.data.filter((item: any) => item.post_id === null);
+        const response: any = await api.get(`/posts?page=${page}`);
+        const itensFiltrados = response.data.filter((item: any) => item.post_id === null);
 
-      const postsWithLikes = await Promise.all(itensFiltrados.map(async (post: FormatPost) => {
-        const likesResponse = await api.get(`/posts/${post.id}/likes`);
-        const userLiked = likesResponse.data.some((like: any) => like.user_login === user?.user_login);
-        return { ...post, likes: likesResponse.data, userLiked };
-      }));
+        const postsWithLikes = await Promise.all(itensFiltrados.map(async (post: FormatPost) => {
+            const likesResponse = await api.get(`/posts/${post.id}/likes`);
+            const userLiked = likesResponse.data.some((like: any) => like.user_login === user?.user_login);
+            return { ...post, likes: likesResponse.data, userLiked };
+        }));
 
-      if (page === 0) {
-        setPosts(postsWithLikes);
-      } else {
-        setPosts(prevPosts => [...prevPosts, ...postsWithLikes]);
-      }
+        if (page === 0) {
+            
+            setPosts(postsWithLikes);
+        } else {
+            
+            setPosts(prevPosts => [...prevPosts, ...postsWithLikes]);
+        }
 
     } catch (error) {
-      alert("Erro ao buscar as postagens");
+        alert("Erro ao buscar as postagens");
     } finally {
-      setLoading(false);
-      setIsRefreshing(false);
+        setLoading(false); 
+        
     }
-  }
+}
+
   
   function openCommentsBottomSheet(post: FormatPost) {
   }
