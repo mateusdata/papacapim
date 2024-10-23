@@ -54,35 +54,36 @@ const FeedScreen = ({ navigation }: any) => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    setPage(0);
-    await fetchData();
-    setIsRefreshing(false);
+    setPage(0); 
+    await fetchData(); 
+    setIsRefreshing(false); 
   };
   
   async function fetchData() {
-    
     try {
       const response: any = await api.get(`/posts?page=${page}`);
       const itensFiltrados = response.data.filter((item: any) => item.post_id === null);
-      
-      
+
+      const postsWithLikes = await Promise.all(itensFiltrados.map(async (post: FormatPost) => {
+        const likesResponse = await api.get(`/posts/${post.id}/likes`);
+        const userLiked = likesResponse.data.some((like: any) => like.user_login === user?.user_login);
+        return { ...post, likes: likesResponse.data, userLiked };
+      }));
+
       if (page === 0) {
-        setPosts(itensFiltrados);
+        setPosts(postsWithLikes);
       } else {
-        setPosts(prevPosts => [...prevPosts, ...itensFiltrados]);
+        setPosts(prevPosts => [...prevPosts, ...postsWithLikes]);
       }
-  
+
     } catch (error) {
       alert("Erro ao buscar as postagens");
     } finally {
-      setLoading(false); 
-      setIsRefreshing(false); 
+      setLoading(false);
+      setIsRefreshing(false);
     }
   }
   
-  async function handleLike(item: any) {
-  }
-
   function openCommentsBottomSheet(post: FormatPost) {
   }
 
@@ -117,7 +118,7 @@ const FeedScreen = ({ navigation }: any) => {
   async function openModalOptions(id:number) {
     try {
       const response = await api.get(`/users/${user?.user_login}/posts`)
-    
+     
       const hasThisPost =  response?.data.find((item:any) => item?.id === id );
       console.log(response.data);
       
@@ -139,7 +140,6 @@ const FeedScreen = ({ navigation }: any) => {
 
 
   async function deletePost(){
-
     try {
       const response = await api.delete(`/posts/${currentPostId}`)
       closeBottomSheet()
@@ -149,11 +149,8 @@ const FeedScreen = ({ navigation }: any) => {
     } catch (error) {
       alert("Error ao apagar o post")
     }
-
-    
   }
-  const renderPost = ({ item }: { item: FormatPost }) => (
-
+  const renderPost = ({ item }: { item: FormatPost | any }) => (
     <View key={item.id} style={[styles.postContainer, { borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0.2 }]}>
       <View style={{ width: "90%", flexDirection: "row" }}>
         <Pressable onPress={() => navigation.navigate("Profile", {
@@ -188,22 +185,25 @@ const FeedScreen = ({ navigation }: any) => {
             </Pressable>
           </View>
           <Text numberOfLines={50000} ellipsizeMode="tail" style={styles.postMessage}>{item.message}</Text>
-          <View style={{ flexDirection: "row", marginTop: 12, gap: 8, width: "50%", right: 15 }}>
+
+          <View style={{ flexDirection: "row", marginTop: 2, gap: 8, width: "50%", right: 15 }}>
             <Pressable onPress={() => handleLike(item)} style={{ flexDirection: "row", alignItems: "center" }}>
-              {false ?
+              {item?.userLiked ?
                 <IconButton icon="heart" iconColor='red' size={22} /> :
                 <IconButton icon="heart-outline" size={22} />
               }
-              <Text>{""}</Text>
+              {false && <Text>{item?.likes?.length}</Text>}
             </Pressable>
-            <Pressable onPress={() => openCommentsBottomSheet(item)} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Pressable onPress={() => openCommentsBottomSheet(item)} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
               <AntDesign name="message1" size={22} color="black" />
-              <Text>{""} </Text>
+              {false && <Text>{item?.likes?.length}</Text>}
             </Pressable>
-            <Pressable onPress={() => sharePost(item)} style={{ flexDirection: "row", alignItems: "center", gap: 12, right: 20 }}>
+            <Pressable onPress={() => sharePost(item)} style={{ flexDirection: "row", alignItems: "center", gap: 2, right: 5 }}>
               <IconButton icon="share" size={22} />
             </Pressable>
           </View>
+
+
         </View>
       </View>
     </View>
@@ -223,10 +223,33 @@ const FeedScreen = ({ navigation }: any) => {
     return <LoadingComponent />;
   }
 
+  async function handleLike(item: any) {
+    try {
+        let newPosts:any = [...posts];
+        const index:any = newPosts.findIndex((post:any) => post.id === item.id);
+
+        if (item.userLiked) {
+           
+            await api.delete(`/posts/${item.id}/likes/${item.likes.find((like: any) => like.user_login === user?.user_login)?.id}`);
+            newPosts[index].likes = newPosts[index].likes.filter((like: any) => like.user_login !== user?.user_login);
+            newPosts[index].userLiked = false;
+        } else {
+           
+            const response = await api.post(`/posts/${item.id}/likes`);
+            newPosts[index].likes.push(response.data);
+            newPosts[index].userLiked = true;
+        }
+
+        setPosts(newPosts);
+    } catch (error) {
+        alert("Erro ao curtir/descurtir a postagem");
+    }
+}
+
+
   return (
     <SafeAreaProvider>
       <ButtonAddPost />
-      <Text>{String(currentPostId)}</Text>
       <CommentsBottomSheet currentPost={currentPost} />
       <View style={[styles.container, {
         paddingTop: insets.top,
