@@ -10,25 +10,25 @@ export default function Comments({ route }: any) {
     const [newComment, setNewComment] = useState('');
     const [replies, setReplies] = useState<any>([]);
 
-    // Função para buscar as respostas da postagem
+   
     const fetchReplies = async () => {
         try {
             const response = await api.get(`/posts/${currentPost.id}/replies`);
-            setReplies(response.data); // Atualiza o estado com as respostas recebidas
+            setReplies(response.data);
         } catch (error) {
             console.error('Erro ao buscar respostas:', error);
         }
     };
 
     useEffect(() => {
-        fetchReplies(); // Buscar respostas assim que a tela for renderizada
+        fetchReplies();
     }, []);
 
-    // Função para adicionar uma nova resposta ao post via API POST
+   
     const addReply = async () => {
         if (newComment.trim()) {
             try {
-                // Faz a requisição POST para adicionar a nova resposta
+               
                 const response = await api.post(`/posts/${currentPost.id}/replies`, {
                     reply: {
                         message: newComment,
@@ -37,10 +37,10 @@ export default function Comments({ route }: any) {
 
                 const newReply = response.data;
 
-                // Atualiza a lista de respostas com a nova resposta
+               
                 setReplies([...replies, newReply]);
 
-                // Limpa o campo de texto
+               
                 setNewComment('');
             } catch (error) {
                 console.error('Erro ao adicionar resposta:', error);
