@@ -176,7 +176,7 @@ const FeedScreen = ({ navigation }: any) => {
         paddingRight: insets.right,
       }]}>
         <FlatList
-          ListHeaderComponent={<HeaderFeed />}
+          ListHeaderComponent={<HeaderFeed  navigation={navigation}/>}
           data={posts}
           renderItem={renderPost}
           keyExtractor={(item) => item.id.toString()}

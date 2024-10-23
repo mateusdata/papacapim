@@ -21,7 +21,7 @@ interface Follow {
   followed_login?: string;
 }
 
-export default function Profile({ route }: { route: { params: { profile: FormarProfile } } }) {
+export default function Profile({ route }: { route: any}) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [followers, setFollowers] = useState<number | null>(null);
